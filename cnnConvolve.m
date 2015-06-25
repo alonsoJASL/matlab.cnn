@@ -20,6 +20,10 @@ function [Fconv] = cnnConvolve(filterDim, numFilters, images, W, b)
 % 
 % 
 
+% Written by: Jose Alonso Solis Lemus
+% City University London.
+
+
 [imageDim1, imageDim2, numImages] = size(images);
 convDim = [imageDim1 imageDim2] - filterDim + 1;
 
