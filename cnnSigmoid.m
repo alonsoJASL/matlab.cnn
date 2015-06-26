@@ -2,7 +2,10 @@ function [a] = cnnSigmoid(varargin)
 %       APPLY SPECIFIED SIGMOID FUNCTION
 % Applies specified sigmoid function to a vector z which can be provided or
 % computed through inputs: (x,W,b). User can specify any function with 
-% the string whichSigmoid.
+% the string whichSigmoid. User is allowed to set the function in a
+% vectorized way, so in case of usage(3) and usage(4), that means that even
+% if b is a vector of size(b)=[numClasses 1], here it will be properly
+% computed. 
 % 
 % usage: (1) a = cnnSigmoid(z)
 %           Uses 'regular' sigmoid function over vector z:
@@ -35,14 +38,20 @@ switch nargin
         x = varargin{1};
         W = varargin{2};
         b = varargin{3};
-        z = W*x+b;
+        z = W*x;
+        for i=1:length(b)
+            z(i,:) = z(i,:) + b(i);
+        end
         whichSigmoid = 'sigmoid';
         
     case 4; % x, W, b, whichSigmoid
         x = varargin{1};
         W = varargin{2};
         b = varargin{3};
-        z = W*x+b;
+        z = W*x;
+        for i=1:length(b)
+            z(i,:) = z(i,:) + b(i);
+        end
         whichSigmoid = varargin{4};        
     
     otherwise

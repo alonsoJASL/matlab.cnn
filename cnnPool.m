@@ -5,6 +5,34 @@ function [Fpool] = cnnPool(poolSize, Fconv, whichPool)
 % input for whichPool is the name of the function one wants to use
 % (default=mean)
 %
+% usage: (1) [Fpool] = cnnPool(poolSize, Fconv) -> generates pools of
+%           dimension (poolSize X poolSize) for each of the images stored
+%           in Fconv. This is a mean pooling. 
+%        (2) [Fpool] = cnnPool(poolSize, Fconv, whichPool) -> generates the
+%          'whichPool' Pooling of the images in Fconv. whichPool can be any
+%           function name (string) that takes one matrix and returns a 
+%           number. 
+% input: 
+%          poolSize := the size user wants the pool to be. So, if user
+%                      wishes to have as output a lot of 2X2 matrices, 
+%                       poolSize=2.
+%             Fconv := 4D matrix of size:
+%
+%               size(Fconv) = [convDim1 convDim2 numFilters numImages]
+%
+%         whichPool := (optional) Function that describes matrices' inputs
+%                      with one value, e.g 'mean'(default), 'std', 'max',
+%                      'min' or whatever you want. 
+%
+% output: 
+%             Fpool := 4D matrix that holds the pooling output of every
+%                      convolved image.
+%
+%               size(Fpool) = [poolSize poolSize numFilters numImages]
+% 
+
+% Jose Alonso Solis Lemus
+% 2015
 
 if nargin < 3
     whichPool = 'mean';
@@ -21,10 +49,10 @@ end
 [convDim1, convDim2, numFilters, numImages] = size(Fconv);
 poolDimension = [fix(convDim1/poolSize) fix(convDim2/poolSize)];
 
-Fpool = zeros(poolDimension(1), poolDimension(2),numFilters, numImages);
+Fpool = zeros(poolSize, poolSize,numFilters, numImages);
 
-rowsizes = poolSize*ones(poolDimension(1), 1);
-colsizes = poolSize*ones(poolDimension(2), 1);
+rowsizes = poolDimension(1)*ones(poolSize, 1);
+colsizes = poolDimension(2)*ones(poolSize, 1);
 
 missingRows = convDim1 - sum(rowsizes);
 missingCols = convDim2 - sum(colsizes);

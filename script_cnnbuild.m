@@ -1,54 +1,81 @@
 % Script File: Convolutional Neural Network (CNN) Build.
-% File to implement the various steps of a CNN and prove 
+% File to implement the various steps of a CNN. Uses MNIST digit database
+% (on neuralNetInit1.mat file).
+% 
 
-% Test convolution on 5000
+% Test convolution on 500
 clear all
 close all
 clc
 
 load neuralNetInit1
+tic 
 
-numImages = 50;
-numFilters = 7;
-filtDim = 8;
+imageDim = [28 28];
+numClasses = 10; % because there are 10 digits. 
+numImages = 500;
+numFilters = 10;
+filtDim = 9;
+poolSize = 2;
 
-poolSize = 10;
-whichPool = 'max';
+whichPool = 'var';
 
-images = zeros(28,28,numImages);
-Wcon = rand(filtDim, filtDim, numFilters);
-bcon = rand(numFilters,1);
+hiddenSize = (poolSize^2)*numFilters;
+% parameters for the implementation of the neural network.
+epsilon = 0.01; % YOLO
+lambda = 1; % YOLO as well!
 
+% Images and groud truth
+images = zeros(imageDim(1), imageDim(2), numImages);
 idx = randi(42000, numImages,1);
+thisY = Y(:,idx); % this experiment's ground truth.
+thisy = y(idx);
 
 for i=1:numImages
     images(:,:,i) = reshape(A(idx(i),:),28,28)';
 end
-% now we normalize the filters.
-for j=1:numFilters
-    Wcon(:,:,j) = Wcon(:,:,j)./sum(sum(Wcon(:,:,j)));
-end
+
+Wcon = rand(filtDim, filtDim, numFilters);
+bcon = rand(numFilters,1);
+Wd = rand(numClasses, hiddenSize);
+bd = rand(numClasses,1);
 
 %
-tic
 Fconv = cnnConvolve(filtDim, numFilters, images, Wcon,bcon);
+[convDim1, convDim2,~,~] = size(Fconv);
 Fpool = cnnPool(poolSize,Fconv, whichPool);
 
-% Now the neural network layers!
-% parameters
-epsilon = 0.5; % YOLO
-lambda = 1; % YOLO as well!
-
-poolSize2 = size(Fpool);
-Funroll = zeros(poolSize2(1)*poolSize2(2)*poolSize2(3), poolSize2(4));
-
-for i=1:size(Funroll,2)
-    Funroll(:,i) = reshape(Fpool(:,:,:,i),size(Funroll,1), 1);
+% Now the neural network layers
+% Unrolling the actual input to the neural network. 
+Funroll = zeros(hiddenSize, numImages);
+%
+for i=1:numImages
+    Funroll(:,i) = reshape(Fpool(:,:,:,i),hiddenSize, 1);
 end
 
+%Forward propagation
+A1 = Funroll;
+A2 = cnnSigmoid(A1,Wd,bd);
+
+h0 = zeros(numImages,1);
+for i=1:numImages
+    [~,h0(i)] = max(A2(:,i));
+end
+
+% DO THE SOFTMAX REGRESSION
+yA2 = zeros(size(thisy));
+
+expA2 = A2;
+for i=1:numImages
+    yA2(i) = expA2(thisy(i),i);
+end
+sumA2 = sum(expA2,1)'; 
+%
+J = - sum(yA2./sumA2);
+
+toc
+%% The old way
 [M] = size(Funroll,1); % 
-thisY = Y(:,idx); % this experiment's ground truth.
-thisy = y(idx);
 
 W1 = epsilon.*(2*rand(M,M) - 1);
 b1 = epsilon.*(2*rand(M,1) - 1);
@@ -57,12 +84,14 @@ W2 = epsilon.*(2*rand(10,M) - 1);
 b2 = epsilon.*(2*rand(10,1) - 1);
 
 A1 = Funroll;
-A2 = cnnSigmoid(A1,W1,kron(b1,ones(1,numImages)));
-A3 = cnnSigmoid(A2, W2, kron(b2, ones(1,numImages)));
+A2 = cnnSigmoid(A1,W1,b1);
+A3 = cnnSigmoid(A2, W2,b2);
 
 H0 = zeros(size(A3));
+h0 = zeros(size(thisy));
 for i=1:numImages
     H0(A3(:,i)==max(A3(:,i)),i) = 1;
+    [~,h0(i)] = max(A3(:,i));
 end
 
 vectJ = (thisY.*log(A3) + (1-thisY).*log(1-A3));
@@ -79,5 +108,3 @@ DELTA2 = delta3*A2';
 %
 D1 = DELTA1' + lambda.*W1;
 D2 = DELTA2 + lambda.*W2;
-
-toc
