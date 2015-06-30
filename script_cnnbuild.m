@@ -64,7 +64,6 @@ end
 
 % DO THE SOFTMAX REGRESSION
 yA2 = zeros(size(thisy));
-
 expA2 = A2;
 for i=1:numImages
     yA2(i) = expA2(thisy(i),i);
