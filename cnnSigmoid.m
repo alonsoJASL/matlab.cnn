@@ -38,20 +38,16 @@ switch nargin
         x = varargin{1};
         W = varargin{2};
         b = varargin{3};
-        z = W*x;
-        for i=1:length(b)
-            z(i,:) = z(i,:) + b(i);
-        end
+        z = W*x + repmat(b,1,size(x,2));
+
         whichSigmoid = 'sigmoid';
         
     case 4; % x, W, b, whichSigmoid
         x = varargin{1};
         W = varargin{2};
         b = varargin{3};
-        z = W*x;
-        for i=1:length(b)
-            z(i,:) = z(i,:) + b(i);
-        end
+        z = W*x + repmat(b,1,size(x,2));
+
         whichSigmoid = varargin{4};        
     
     otherwise

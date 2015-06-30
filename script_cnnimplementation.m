@@ -40,17 +40,13 @@ for i=1:numImages
 end
 
 tic 
-J = softmaxRegression(theta, images, thisy, filtDim, numFilters, ...
+[J, gradJ, outsies] = softmaxRegression(theta, images, thisy, filtDim, numFilters, ...
                       numClasses, poolSize, whichPool,false);
 t=toc;
-fprintf('\nOne iteration of cost function: %f seconds.', t);
+fprintf('One iteration of cost function: %f seconds.\n', t);
 
-tic
-options = optimoptions('fminunc','GradObj','on');
-[thStar, Jstar, exitflag, output, gradJstar] = fminunc(...
-    @(th) softmaxRegression(th, images, thisy, filtDim, numFilters, ...
-                      numClasses, poolSize, whichPool,false), ...
-                      theta, options);
+tic 
+% minimisation with our computedd gradient
+
 t2 = toc;
-fprintf('\nOptimization without backpropagation: %f seconds.', t2);
-
+fprintf('fminunc time: %f seconds', t2);

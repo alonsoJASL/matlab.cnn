@@ -1,4 +1,4 @@
-function [J, gradJ] = softmaxRegression(theta,x,y,filtDim, numFilters, ...
+function [J, gradJ, outsies] = softmaxRegression(theta,x,y,filtDim, numFilters, ...
                                         numClasses, poolSize, ...
                                         whichPool, SDG)
 %        MULTINOMIAL LOGISTIC REGRESSION
@@ -40,24 +40,81 @@ A1 = zeros(hiddenSize, numImages);
 for i=1:numImages
     A1(:,i) = reshape(Fpool(:,:,:,i),hiddenSize, 1);
 end
+
+% activation softmax
 A2 = cnnSigmoid(A1,Wd,bd);
+A2 = bsxfun(@minus, A2, max(A2));
+A2 = exp(A2); 
 
-h0 = zeros(numImages,1);
-for i=1:numImages
-    [~,h0(i)] = max(A2(:,i));
-end
+probs = bsxfun(@rdivide, A2, sum(A2));
+labelIndex = sub2ind(size(A2), y', 1:numImages);
+oneLabels = zeros(size(A2));
+oneLabels(labelIndex) = 1;
 
-% DO THE SOFTMAX REGRESSION
-yA2 = zeros(size(y));
-expA2 = A2;
-for i=1:numImages
-    yA2(i) = expA2(y(i),i);
-end
-sumA2 = sum(expA2,1)'; 
-%
-J = - sum(yA2./sumA2);
+J = -sum(sum(oneLabels .* log(probs)));
 
 if nargout > 1
-    gradJ = zeros(size(theta));
+    [convDim1, convDim2,~,~] = size(Fconv);
+    poolDim1 = convDim1/poolSize;
+    poolDim2 = convDim2/poolSize;
+    
+    % Go back first nn layer
+    delta1 = (probs - oneLabels)/numImages;
+    errorsPooled = Wd' * delta1; 
+    errorsPooled = reshape(errorsPooled,[],poolSize,numFilters,numImages);
+    
+    % Unpool errors
+    errPooling = zeros(convDim1, convDim2, numFilters, numImages);
+    unpooling = ones(poolDim1, poolDim2);
+    
+    poolArea = poolDim1*poolDim2;
+    unpooling = unpooling/poolArea;
+    
+    for i=1:numImages % for each image
+        for j=1:numFilters % for each filter
+            e = errorsPooled(:,:,j,i);
+            errPooling(:,:,j,i) = kron(e,unpooling);
+        end
+    end
+    
+    % Go back on second convolutional phase
+    errorsConv = errPooling .* Fconv .* (1-Fconv);
+    
+    % Now the gradients
+    gradWd = delta1 * A1';
+    gradbd = sum(delta1,2);
+    
+    gradWc = zeros(size(Wc));
+    gradbc = zeros(size(bc));
+    
+    for j=1:numFilters
+        e = errPooling(:,:,j,:);
+        gradbc(j) = sum(e(:));
+    end
+    for i=1:numImages
+        for j=1:numFilters
+            e = errorsConv(:,:,j,i);
+            errorsConv(:,:,j,i) = rot90(e,2);
+        end
+    end
+    
+    for j=1:numFilters
+        gradWc_filter = zeros(size(gradWc,1), size(gradWc,2));
+        for i=1:numImages
+            gradWc_filter = gradWc_filter + conv2(x(:,:,i),...
+                errorsConv(:,:,j,i),'valid');
+        end
+        gradWc(:,:,j) = gradWc_filter;
+    end
+        
+    gradJ = [gradWc(:); gradWd(:); gradbc(:);gradbd(:)];
+    
+    if nargout > 2
+        outsies.gradWc = gradWc;
+        outsies.gradbc = gradbc;
+        outsies.gradWd = gradWd;
+        outsies.gradbd = gradbd;
+    end
+    
 end
 
