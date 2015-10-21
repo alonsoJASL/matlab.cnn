@@ -1,4 +1,5 @@
-function [J, gradJ] = cnnCostfunction(x,y,W,b,SGD)
+function [J, gradJ] = cnnCostfunction(theta,x,y,filtDim, numFilters, ...
+                                        numClasses, poolSize, whichPool)
 %                       CNN COST FUNCTION
 % Calculates the cost of using a set of parameters (W,b) for a specific
 % training set and ground truth (x,y). User can choose which cost function
@@ -7,20 +8,13 @@ function [J, gradJ] = cnnCostfunction(x,y,W,b,SGD)
 % 
 %
 
-if nargin < 5
-   whichCost = 'softmaxRegression';
-   SGD = false;
-else
-    try 
-        aux = feval(whichCost, rand(1,3), rand(1,3), rand(3,3), rand(1,3));
-        clear aux;
-    catch e
-        disp('Cost function not defined properly.');
-        disp('Using normal softmaxRegresion');
-        whichCost = 'softmaxRegresion';
-    end
-    if nargin > 5
-        SGD = (SGD == true);
-    end
-end
+filtDim=5;
+numFilters=12;
+numClasses=2;
+poolSize=2;
+whichPool='max';
+
+% some parameters
+epsilon = 0.01; % YOLO
+lambda = 1; % YOLO as well!
 

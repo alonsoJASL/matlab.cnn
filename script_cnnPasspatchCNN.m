@@ -9,10 +9,10 @@ filterDim = 5;
 numFilters = 12;
 poolsize = 2;
 
-W1 = randn(filterDim, filterDim, numFilters);
-b1 = randn(numFilters, 1);
-W2 = randn(filterDim, filterDim, 1);
-b2 = randn;
+W1 = rand(filterDim, filterDim, numFilters);
+b1 = rand(numFilters, 1);
+W2 = rand(filterDim, filterDim, 1);
+b2 = rand;
 
 A1 = rand(64,192);
 A2 = rand(2,64);

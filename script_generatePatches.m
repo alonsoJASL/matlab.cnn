@@ -1,9 +1,9 @@
 % script file : Patch creation 
 % 
 
-% clear all
-% close all
-% clc
+clear all
+close all
+clc
 
 fname1 = 'N2DHGOWT1_0.tif';
 fname2 = 'N2DHGOWT1_1.tif';
@@ -11,18 +11,16 @@ fname2 = 'N2DHGOWT1_1.tif';
 A = imread(fname1);
 [height, width] = size(A);
 
-% we add a NaN "skirt" to the matrix.
+% we add a -1 "skirt" to the matrix.
 X = -ones(height+26,width+26);
 X(14:end-13,14:end-13) = A;
 
-imindex=1:50;
 Y = imread(strcat('GT_',fname1));
 Y = Y>0;
-Y = Y(imindex);
 
-p1 = X(1:28,1:28);
-patches = zeros(28,28,length(imindex));
+patches = zeros(28,28,1024);
 
+%%
 filter = rand(9);
 
 index = 1;
